@@ -2,12 +2,15 @@ import React,{useEffect,useState} from "react"
 import {View,Text,TouchableOpacity}from "react-native"
 import firebase from "firebase"
 import * as Location from 'expo-location';
+import { observe } from "react-native/Libraries/LogBox/Data/LogBoxData";
+import { Button } from "react-native-web";
 
 
 const DriverDashboard=()=>{
 
     const [driverLocation,setDriverLocation]=useState({})
    const [driverInfo,setDriverInfo]=useState({})
+   const[availableRides,SetAvailableRides]=useState({})
    
     const logout = () =>{
             firebase.auth().signOut()
@@ -41,6 +44,11 @@ const DriverDashboard=()=>{
       useEffect(async()=>{
         await userInfo()
       },[])
+
+
+      useEffect(()=>{
+        MyRides()
+      },[])
     //   console.log(driverLocation,"CurrentLocation=====>")
     // console.log(driverInfo,"Driver Info");
 
@@ -54,7 +62,7 @@ const DriverLocation=async()=>{
         name:driverInfo.name,
     })
     .then((res) => {
-        alert("successfully loged in")
+        console.log(res,"Responsee");
 }).catch((err) => {
     // console.log(err, "ERRRRRRRRRRR");
 })
@@ -71,14 +79,35 @@ const userInfo=async()=>{
     })
 }
 
-const chala=()=>{
-    alert("Chal gaya")
+const MyRides=()=>{
+    firebase.database().ref("AllRides")
+    .on("value",snapshot=>{
+        let data=snapshot.val()?snapshot.val():{}
+        SetAvailableRides(data)
+    })
 }
+
+let ridesKey=Object.keys(availableRides)
+console.log(ridesKey,"Key");
+
       
     return(
         <View style={{marginTop:200}}>
+            {ridesKey.map(values=>{
+                return(
+                    <>
+                    <View
+                    style={{borderWidth:1,borderColor:"black",borderRadius:10,}}
+                    >
+                        <Text style={{fontSize:18,fontWeight:"bold"}}>  Name: {availableRides[values].username}</Text>
+                        <Text style={{fontSize:18,fontWeight:"bold"}}>  Fair: {availableRides[values].Charges}Rs</Text>
+                        <Text style={{fontSize:18,fontWeight:"bold"}}>  User Distance: {availableRides[values].distancebwUD}</Text>
+                        <Text style={{fontSize:18,fontWeight:"bold"}}>  Total Ride Distance : {availableRides[values].distance}</Text>
+                    </View>
+                    </>
+                )
+            })}
             <Text>
-                {/* {driverLocation.coords.latitude} */}
                 <TouchableOpacity onPress={logout} >
                     <Text>LogOut</Text>
                 </TouchableOpacity>

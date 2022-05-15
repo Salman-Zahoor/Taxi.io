@@ -9,8 +9,6 @@ const Register=(props)=>{
         email:"",
         password:""
     })
-   
-
 
     const onChangeHandler = (type, value) => {
         setInputs({
@@ -18,8 +16,6 @@ const Register=(props)=>{
             [type]: value
         })
     }
-
-
 
     const RegisterUser=()=>{
         firebase.auth().createUserWithEmailAndPassword(inputs.email, inputs.password)

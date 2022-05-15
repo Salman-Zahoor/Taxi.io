@@ -5,7 +5,7 @@ import {getDistance,getCompassDirection} from "geolib";
 
 
 
-const SelectDriver=({route})=>{
+const SelectDriver=({route,navigation})=>{
 
     const [driverData,setDriverData]=useState({})
     const [driverLoc,setDriverLoc]=useState([])
@@ -19,13 +19,15 @@ const SelectDriver=({route})=>{
 
     let driverLat=Object.keys(driverData).map(name =>(driverData[name].latitude));
     let driverLong=Object.keys(driverData).map(name =>(driverData[name].longitude));
+    let driverName=Object.keys(driverData).map(name =>(driverData[name].name));
+    let driverId=Object.keys(driverData).map(name =>(driverData[name].id));
 
     var totalDis = getDistance(
         { latitude: driverLat, longitude:driverLong },
         { latitude: pickupLatitude, longitude: pickupLongitude}
       );
-     var distance=`Distance ${totalDis / 1000} KM`;
-      console.log(distance,"Distance bw user and -----");
+     var distancebwUD=totalDis / 1000;
+      // console.log(distance,"Distance bw user and -----");
 
     
 
@@ -50,8 +52,8 @@ const SelectDriver=({route})=>{
           { latitude: pickupLatitude, longitude:pickupLongitude },
           { latitude: dropLatitude, longitude: dropLongitude}
         );
-       var distance=`Distance ${dis / 1000} KM`;
-        console.log(distance,"Distanceeeeeeeeee");
+       var distance=dis / 1000;
+        // console.log(distance,"Distanceeeeeeeeee");
 
         
     return(
@@ -63,10 +65,25 @@ const SelectDriver=({route})=>{
                     {driverData[values].name}
                 </Text>
                 <Text style={{color:"black"}}>
-                    {totalDis}KM away
+                    {distancebwUD}
                 </Text>
             </View>
             )})}
+            <Button
+            title="Continue"
+            onPress={()=>navigation.navigate("ConfirmRide",{
+              pickupLongitude,
+             pickupLatitude,
+             dropLongitude,
+             dropLatitude,
+             driverLat,
+             driverLong,
+             driverName,
+             driverId,
+             distance,
+             distancebwUD
+            })}
+            ></Button>
             
         </View>
     )

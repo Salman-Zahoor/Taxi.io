@@ -103,8 +103,7 @@ const Dashboard=(props)=>{
       
       
   
-    const distanceDirection=()=>{
-      // calculateDistance();
+    const Logout=()=>{
       firebase.auth().signOut()
     }   
 
@@ -127,7 +126,6 @@ const Dashboard=(props)=>{
     console.log(dholkey,"Dholkeyyyy");
     // setDriverLoc(dholkey)
     console.log(dholkey,"dholllll");
-
 
 
     const origin = {latitude: location.latitude, longitude: location.longitude};
@@ -173,6 +171,7 @@ const Dashboard=(props)=>{
       }
     />
   </View>
+
     
 
 
@@ -262,10 +261,10 @@ const Dashboard=(props)=>{
           dropLatitude:droplocation.latitude,
         })}
       />
-      {/* <Button
+      <Button
         title="Check drivers"
-        onPress={newModal}
-      /> */}
+        onPress={Logout}
+      />
         </View>
         
     )
