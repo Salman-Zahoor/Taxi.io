@@ -8,7 +8,7 @@ import PolylineDirection from '@react-native-maps/polyline-direction';
 import MapViewDirections from 'react-native-maps-directions';
 import firebase from "firebase"
 
-const Dashboard=()=>{
+const Dashboard=(props)=>{
     const [location, setLocation] = useState({
         latitude: 24.9179871,
         longitude: 67.0961782,
@@ -53,6 +53,10 @@ const Dashboard=()=>{
         })();
       }, []);
 
+      useEffect(()=>{
+        availabaleDrivers()
+      },[])
+
 
       const getPlaces = async (text) => {
         setQuery(text)
@@ -66,9 +70,10 @@ const Dashboard=()=>{
         // console.log('result --->', results)
         setPlaces(results)
       }
+      
 
       // console.log(location.latitude,"location===>>>>>>>");
-
+        // console.log(mydata,"dtaaadddd");
       const searchPlaces = async (text) => {
         setQuerysec(text)
         const response = await fetch(`https://api.foursquare.com/v3/places/search?query=${text}&near=Karachi&limit=5`, {
@@ -95,13 +100,7 @@ const Dashboard=()=>{
       }
 
 
-      const calculateDistance = () => {
-        var dis = getDistance(
-          { latitude: location.latitude, longitude:location.longitude },
-          { latitude: droplocation.latitude, longitude: droplocation.longitude}
-        );
-        return(`Distance ${dis / 1000} KM`);
-      };
+      
       
   
     const distanceDirection=()=>{
@@ -122,9 +121,14 @@ const Dashboard=()=>{
       setDriverModal(true)
     }
 
-
     let driverKey=Object.keys(driversData)
     console.log(driverKey,"DriverKey");
+    let dholkey=Object.keys(driversData).map(name =>(driversData[name].latitude));
+    console.log(dholkey,"Dholkeyyyy");
+    // setDriverLoc(dholkey)
+    console.log(dholkey,"dholllll");
+
+
 
     const origin = {latitude: location.latitude, longitude: location.longitude};
     const destination = {latitude:droplocation.latitude, longitude: droplocation.longitude};
@@ -219,31 +223,52 @@ const Dashboard=()=>{
     alert("Modal has been closed.");
     setDriverModal(!driverModal)
   }}
+  style={{flex:1,height:1000}}
   >
-    <View>
-      <Text>
-        Salman
-      </Text>
-      <Button
-      title="Select Driver"
-      onPress={availabaleDrivers}
-      >
-      </Button>
-    </View>
+    {driverKey.map(values=>
+    {
+      // var driverLongitude=driversData[values].longitude
+      // var driverLatitude=driversData[values].latitude
+      // var driverId=driversData[values].id
+      // setDriverLoc(driverLongitude)
+      // var mydata={
+      //   driverLatitude,
+      //   driverLongitude,
+      //   driverId
+      // }
+      
+
+      return(    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <View style={{ backgroundColor:"white", height: '35%', width: '80%',borderRadius:20,elevation:10,justifyContent:"center" }}>
+  <Text>
+    {driversData[values].name}
+  </Text>
+  <Button
+  title="Select Driver"
+  onPress={availabaleDrivers}
+  >
+  </Button>
+</View>
+</View>)  
+    })}
   </Modal>
 
       <Button
         title="Continue"
-        onPress={distanceDirection}
+        onPress={()=>props.navigation.navigate("SelectDriver",{
+          pickupLongitude:location.longitude,
+          pickupLatitude:location.latitude,
+          dropLongitude:droplocation.longitude,
+          dropLatitude:droplocation.latitude,
+        })}
       />
-      <Button
+      {/* <Button
         title="Check drivers"
         onPress={newModal}
-      />
+      /> */}
         </View>
         
     )
-
 
 }
 const styles = StyleSheet.create({

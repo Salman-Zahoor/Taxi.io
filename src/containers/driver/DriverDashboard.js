@@ -7,6 +7,8 @@ import * as Location from 'expo-location';
 const DriverDashboard=()=>{
 
     const [driverLocation,setDriverLocation]=useState({})
+   const [driverInfo,setDriverInfo]=useState({})
+   
     const logout = () =>{
             firebase.auth().signOut()
     }
@@ -34,9 +36,13 @@ const DriverDashboard=()=>{
 
       useEffect(async()=>{
         await DriverLocation();
-        await chala()
       },[])
-      console.log(driverLocation,"CurrentLocation=====>")
+
+      useEffect(async()=>{
+        await userInfo()
+      },[])
+    //   console.log(driverLocation,"CurrentLocation=====>")
+    // console.log(driverInfo,"Driver Info");
 
 const DriverLocation=async()=>{
     let id=firebase.auth().currentUser.uid
@@ -45,12 +51,24 @@ const DriverLocation=async()=>{
         id:id,
         longitude:driverLocation.coords.longitude,
         latitude:driverLocation.coords.latitude,
+        name:driverInfo.name,
     })
     .then((res) => {
         alert("successfully loged in")
 }).catch((err) => {
     // console.log(err, "ERRRRRRRRRRR");
 })
+}
+
+const userInfo=async()=>{
+   let id=firebase.auth().currentUser.uid
+     await firebase.database().ref(`driver/${id}`)
+    .on("value",snapshot=>{
+        
+        let data=snapshot.val()?snapshot.val():{}
+        setDriverInfo(data)
+        console.log(data,"details");
+    })
 }
 
 const chala=()=>{
