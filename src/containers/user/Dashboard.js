@@ -1,12 +1,14 @@
 import React,{useEffect,useState} from "react"
-import { View,Text ,StyleSheet,Dimensions,Button,TouchableOpacity,ScrollView,Modal} from "react-native"
+import { View,Text ,StyleSheet,Dimensions,TouchableOpacity,ScrollView,Modal} from "react-native"
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import Autocomplete from 'react-native-autocomplete-input';
 import {getDistance,getCompassDirection} from "geolib";
 import PolylineDirection from '@react-native-maps/polyline-direction';
 import MapViewDirections from 'react-native-maps-directions';
-import firebase from "firebase"
+import firebase from "firebase";
+import { Header,Button } from "../../components";
+import { headerbackground } from "../../constants";
 
 const Dashboard=(props)=>{
     const [location, setLocation] = useState({
@@ -15,17 +17,12 @@ const Dashboard=(props)=>{
         latitudeDelta: 0.005,
         longitudeDelta: 0.005,
       })
-
-      const [modalVisible, setModalVisible] = useState(false);
-      const[driverModal,setDriverModal]=useState(false);
-
       const [droplocation, setDroplocation] = useState({
         latitude: 24.9179872,
         longitude: 67.0961783,
         latitudeDelta: 0.005,
         longitudeDelta: 0.005,
       })
-
       const [hidePickup, setHidepickup] = useState(false);
       const [hideDrop,setHidedrop]=useState(false)
 
@@ -34,6 +31,7 @@ const Dashboard=(props)=>{
   const [query, setQuery] = useState('')
   const [querysec, setQuerysec] = useState('')
   const[driversData,setDriverdata] = useState([])
+  const [myInfo,setMyInfo]=useState({})
       useEffect(() => {
         (async () => {
           let { status } = await Location.requestForegroundPermissionsAsync();
@@ -52,11 +50,14 @@ const Dashboard=(props)=>{
       })
         })();
       }, []);
-
+      
       useEffect(()=>{
         availabaleDrivers()
       },[])
 
+      useEffect(()=>{
+        userInfo()
+      },[])
 
       const getPlaces = async (text) => {
         setQuery(text)
@@ -67,13 +68,10 @@ const Dashboard=(props)=>{
           }
         })
         const { results } = await response.json()
-        // console.log('result --->', results)
         setPlaces(results)
       }
       
 
-      // console.log(location.latitude,"location===>>>>>>>");
-        // console.log(mydata,"dtaaadddd");
       const searchPlaces = async (text) => {
         setQuerysec(text)
         const response = await fetch(`https://api.foursquare.com/v3/places/search?query=${text}&near=Karachi&limit=5`, {
@@ -83,23 +81,21 @@ const Dashboard=(props)=>{
           }
         })
         const { results } = await response.json()
-        // console.log('result --->', results)
         setNewplaces(results)
       }
 
-      console.log(droplocation.longitude,"location===>>>>>>>");
 
-      const setHideresultPickup=(item)=>{
-        setLocation(item)
+      const setHideresultPickup=(item,name,address)=>{
+        setLocation({...item,name,address})
         setHidepickup(!hidePickup)
       }
+
       
-      const setHideresultDrop=(item)=>{
-        setDroplocation(item)
+      const setHideresultDrop=(item,name,address)=>{
+        setDroplocation({...item,name,address})
         setHidedrop(!hideDrop)
       }
-
-
+      console.log(droplocation,"dropppp");
       
       
   
@@ -116,23 +112,26 @@ const Dashboard=(props)=>{
       })
     }
 
-    const newModal=()=>{
-      setDriverModal(true)
+    const userInfo=()=>{
+      let Id=firebase.auth().currentUser.uid
+      firebase.database().ref(`users/${Id}`)
+      .on("value",snapshot=>{
+        let data =snapshot.val()?snapshot.val():{}
+        setMyInfo(data)
+      })
     }
 
-    let driverKey=Object.keys(driversData)
-    console.log(driverKey,"DriverKey");
-    let dholkey=Object.keys(driversData).map(name =>(driversData[name].latitude));
-    console.log(dholkey,"Dholkeyyyy");
-    // setDriverLoc(dholkey)
-    console.log(dholkey,"dholllll");
-
+    // let driverKey=Object.keys(driversData)
+    // console.log(driverKey,"DriverKey");
+    // let dholkey=Object.keys(driversData).map(name =>(driversData[name].latitude));
 
     const origin = {latitude: location.latitude, longitude: location.longitude};
     const destination = {latitude:droplocation.latitude, longitude: droplocation.longitude};
     const GOOGLE_MAPS_APIKEY ="https://maps.googleapis.com/maps/api/js?key=AIzaSyAGsI054v7tVM-sT-U4Tc4bfnCe-c1kxTw_KEY&callback=initMap";
     return(
-        <View style={{flex:2,marginTop:30}}>
+      <View>
+      <Header heading={"Welcome  " + myInfo.name} imageUri={myInfo.image}/>
+        <View style={{flex:2}}>
             <Text>
                 Salman
             </Text>
@@ -146,8 +145,10 @@ const Dashboard=(props)=>{
        hideResults={hidePickup}
         flatListProps={{
           keyExtractor: (_, idx) => idx,
-        renderItem: ({ item }) => (<View style={styles.autocompleteItem}>
-          <TouchableOpacity onPress={()=>{setHideresultPickup(item.geocodes.main)}}>
+        renderItem: ({ item } ) => 
+        // console.log(item,"item")
+        (<View style={styles.autocompleteItem}>
+          <TouchableOpacity onPress={()=>{setHideresultPickup(item.geocodes.main,item.name,item.location.address)}}>
             <Text style={styles.autocompleteText} >{item.name}, {item.location.address}
             </Text>
             </TouchableOpacity>
@@ -163,14 +164,13 @@ const Dashboard=(props)=>{
         flatListProps={{
           keyExtractor: (_, idx) => idx,
         renderItem: ({ item }) => (<View style={styles.autocompleteItem}>
-          <TouchableOpacity onPress={()=>{setHideresultDrop(item.geocodes.main) }}>
+          <TouchableOpacity onPress={()=>{setHideresultDrop(item.geocodes.main,item.name,item.location.address) }}>
             <Text style={styles.autocompleteText} >{item.name}, {item.location.address}
             </Text>
             </TouchableOpacity>
           </View>), }
       }
     />
-  </View>
 
     
 
@@ -200,73 +200,26 @@ const Dashboard=(props)=>{
           // strokeColor="#12bc00"
         />
 
-        <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => {
-          alert("Modal has been closed.");
-          setModalVisible(!modalVisible);
-        }}>
-         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <View style={{ backgroundColor:"white", height: '35%', width: '80%',borderRadius:20,elevation:10,justifyContent:"center" }}>
-          <Text>Salman</Text>
-   </View>
-  </View>
-  </Modal>
-
-  <Modal
-  transparent={true}
-  visible={driverModal}
-  onRequestClose={() => {
-    alert("Modal has been closed.");
-    setDriverModal(!driverModal)
-  }}
-  style={{flex:1,height:1000}}
-  >
-    {driverKey.map(values=>
-    {
-      // var driverLongitude=driversData[values].longitude
-      // var driverLatitude=driversData[values].latitude
-      // var driverId=driversData[values].id
-      // setDriverLoc(driverLongitude)
-      // var mydata={
-      //   driverLatitude,
-      //   driverLongitude,
-      //   driverId
-      // }
       
-
-      return(    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <View style={{ backgroundColor:"white", height: '35%', width: '80%',borderRadius:20,elevation:10,justifyContent:"center" }}>
-  <Text>
-    {driversData[values].name}
-  </Text>
-  <Button
-  title="Select Driver"
-  onPress={availabaleDrivers}
-  >
-  </Button>
-</View>
-</View>)  
-    })}
-  </Modal>
-
-      <Button
-        title="Continue"
-        onPress={()=>props.navigation.navigate("SelectDriver",{
+      <View style={{marginTop:5}}>
+      <Button heading="Continue" color={headerbackground}  onPress={()=>props.navigation.navigate("SelectDriver",{
           pickupLongitude:location.longitude,
           pickupLatitude:location.latitude,
           dropLongitude:droplocation.longitude,
           dropLatitude:droplocation.latitude,
-        })}
-      />
-      <Button
-        title="Check drivers"
-        onPress={Logout}
-      />
+          nameLocation:location.name,
+          address:location.address,
+          dropLocation:droplocation.name,
+          dropLocationAddress:droplocation.address,
+          userName:myInfo.name,
+        })}/>
         </View>
-        
+        <View>
+        <Button heading="Logout" color={headerbackground}  onPress={Logout}/>
+        </View>
+        </View>
+        </View>
+        </View>
     )
 
 }
